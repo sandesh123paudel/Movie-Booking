@@ -6,49 +6,62 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
 
+// Regular user registration
 exports.register = async (req, res) => {
   try {
-    // Get user data from request body
     const { fullName, email, password } = req.body;
 
-    // Check existingg user
+    // Check if user exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
+
+    // If user exists, return early with error
     if (existingUser) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "User already exists",
       });
     }
 
-    // Hash password
+    // If we get here, user doesn't exist, so create new user
+    // Note: role is forcefully set to "user" for security
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Create user with role explicitly set to "user"
     const savedUser = await User.create({
       fullName,
       email: email.toLowerCase(),
       password: hashedPassword,
+      role: "user", // Force role to be "user" for regular registration
     });
 
+    // Generate token
     const token = generateToken(savedUser._id);
 
+    // Remove password from response
     savedUser.password = undefined;
 
-    res.status(201).json({
+    // Return success response
+    return res.status(201).json({
       success: true,
       message: "User registered successfully",
       data: {
         _id: savedUser._id,
         fullName: savedUser.fullName,
+        role: savedUser.role,
         email: savedUser.email,
         token,
       },
     });
   } catch (error) {
-    // Internal server error
-    res.status(500).json({
+    // Log error for debugging
+    console.error("Registration error:", error);
+
+    // Return error response
+    return res.status(500).json({
       success: false,
       message: "Something went wrong during registration",
       error: error.message,
     });
   }
 };
+
