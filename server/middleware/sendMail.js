@@ -1,18 +1,27 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
+const transport = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
+    user: process.env.EMAIL_ADDRESS,
     pass: process.env.EMAIL_PASSWORD,
   },
+});
+
+// Verify transporter configuration
+transport.verify((error, success) => {
+  if (error) {
+    console.error("Email transporter configuration error:", error);
+  } else {
+    console.log("Email transporter is ready to send messages");
+  }
 });
 
 exports.sendVerificationEmail = async (email, verificationToken) => {
   const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: process.env.EMAIL_ADDRESS,
     to: email,
     subject: "Verify Your Email - Movie Booking",
     html: `
@@ -34,10 +43,19 @@ exports.sendVerificationEmail = async (email, verificationToken) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    console.log("Attempting to send email to:", email);
+    console.log("Verification link:", verificationLink);
+
+    const result = await transport.sendMail(mailOptions);
+    console.log("Email sent successfully:", result.messageId);
     return true;
   } catch (error) {
     console.error("Error sending verification email:", error);
+    console.error("Error details:", {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+    });
     return false;
   }
 };

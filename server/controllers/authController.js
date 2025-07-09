@@ -42,14 +42,18 @@ exports.register = async (req, res) => {
     });
 
     // Generate verification token after user creation
-    const verificationToken = newUser.generateVerificationToken();
+    const verificationToken = await newUser.generateVerificationToken(); // Added await
     await newUser.save();
+
+    console.log("Verification token generated:", verificationToken); // Debug log
 
     // Send verification email
     const emailSent = await sendVerificationEmail(
       newUser.email,
       verificationToken
     );
+
+    console.log("Email sent status:", emailSent); // Debug log
 
     // Generate JWT token
     const token = generateToken(newUser._id);
@@ -59,8 +63,9 @@ exports.register = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message:
-        "User registered successfully. Please check your email to verify your account.",
+      message: emailSent
+        ? "User registered successfully. Please check your email to verify your account."
+        : "User registered successfully, but failed to send verification email. Please request a new verification email.",
       emailSent,
       data: {
         _id: newUser._id,
@@ -109,7 +114,7 @@ exports.sendVerificationEmail = async (req, res) => {
       });
     }
 
-    const verificationToken = user.generateVerificationToken();
+    const verificationToken = await user.generateVerificationToken(); // Added await
     await user.save();
 
     const emailSent = await sendVerificationEmail(email, verificationToken);
@@ -177,66 +182,6 @@ exports.verifyEmail = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Something went wrong during email verification",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
-
-// Login Controller
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide email and password",
-      });
-    }
-
-    // Find user and include password field
-    const user = await User.findOne({ email: email.toLowerCase() }).select(
-      "+password"
-    );
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-    }
-
-    // Check if email is verified
-    if (!user.isEmailVerified) {
-      return res.status(400).json({
-        success: false,
-        message: "Please verify your email before logging in",
-      });
-    }
-
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Remove password from response
-    user.password = undefined;
-
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
-      data: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        isEmailVerified: user.isEmailVerified,
-        token,
-      },
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong during login",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
