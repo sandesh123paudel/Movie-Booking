@@ -1,6 +1,12 @@
 const nodemailer = require("nodemailer");
+const path = require("path");
+const dotenv = require("dotenv");
 
-const transport = nodemailer.createTransport({
+// Load environment variables from the correct path
+dotenv.config({ path: path.join(__dirname, "../.env") });
+
+// Create reusable transporter object using SMTP transport
+let transport = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_ADDRESS,
@@ -8,22 +14,32 @@ const transport = nodemailer.createTransport({
   },
 });
 
-// Verify transporter configuration
-transport.verify((error, success) => {
-  if (error) {
-    console.error("Email transporter configuration error:", error);
-  } else {
-    console.log("Email transporter is ready to send messages");
-  }
-});
-
 exports.sendVerificationEmail = async (email, verificationToken) => {
+  // Validate environment variables before sending
+  if (
+    !process.env.EMAIL_ADDRESS ||
+    !process.env.EMAIL_PASSWORD ||
+    !process.env.CLIENT_URL
+  ) {
+    console.error("Missing required environment variables for sending email");
+    return false;
+  }
+
+  if (!email || !verificationToken) {
+    console.error("Missing required parameters:", {
+      email: !!email,
+      token: !!verificationToken,
+    });
+    return false;
+  }
+
   const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
 
   const mailOptions = {
-    from: process.env.EMAIL_ADDRESS,
+    from: `"Movie Booking" <${process.env.EMAIL_ADDRESS}>`,
     to: email,
     subject: "Verify Your Email - Movie Booking",
+    text: `Please verify your email by clicking this link: ${verificationLink}`,
     html: `
       <h1>Email Verification</h1>
       <p>Please click the link below to verify your email address:</p>
@@ -43,19 +59,10 @@ exports.sendVerificationEmail = async (email, verificationToken) => {
   };
 
   try {
-    console.log("Attempting to send email to:", email);
-    console.log("Verification link:", verificationLink);
-
     const result = await transport.sendMail(mailOptions);
-    console.log("Email sent successfully:", result.messageId);
-    return true;
+    return result;
   } catch (error) {
-    console.error("Error sending verification email:", error);
-    console.error("Error details:", {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-    });
+    console.error("Error sending email:", error);
     return false;
   }
 };
