@@ -12,7 +12,7 @@ const generateToken = (id) => {
 // Register Controller
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+  const { fullName, email, password } = req.body;
 
     // Validate input
     if (!fullName || !email || !password) {
