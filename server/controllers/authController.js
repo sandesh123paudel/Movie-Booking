@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { sendVerificationEmail } = require("../middleware/sendMail");
+const { cookie } = require("express-validator");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
@@ -232,6 +233,8 @@ exports.login = async (req, res) => {
     }
 
     const token = generateToken(existingUser._id);
+
+    await res.cookie("token", token, { maxAge: 1 * 24 * 60 * 60 *1000 });
 
     // Remove password from response
     existingUser.password = undefined;
