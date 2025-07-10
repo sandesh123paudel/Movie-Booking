@@ -1,8 +1,10 @@
 import React from "react";
 import { assets } from "../assets/assets";
 import { ArrowRight, Calendar1Icon, ClockIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   return (
     <div className='flex flex-col items-start justify-center gap-4 px-6 md:px-16 lg:px-36 bg-[url("/backgroundImage.png")] bg-cover bg-center h-screen'>
       <img src={assets.marvelLogo} alt="" className="max-h-11 lg:h-11 mt-20" />
@@ -24,7 +26,10 @@ const HeroSection = () => {
         other to survive, two people meet in London and try to stop a
         conspiracy.
       </p>
-      <button className="flex items-center gap-1 text-sm font-medium px-6 py-3 bg-primary rounded-full hover:bg-primary-dull transition cursor-pointer">
+      <button
+        className="flex items-center gap-1 text-sm font-medium px-6 py-3 bg-primary rounded-full hover:bg-primary-dull transition cursor-pointer"
+        onClick={() => navigate("/movies")}
+      >
         Explore Movies
         <ArrowRight className="h-5 w-5" />
       </button>
