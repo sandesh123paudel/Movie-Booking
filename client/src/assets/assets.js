@@ -33,7 +33,7 @@ export const dummyTrailers = [
   },
 ];
 
-const dummyCastsData = [
+export const dummyCastsData = [
   {
     name: "Milla Jovovich",
     profile_path:
