@@ -33,7 +33,7 @@ const MovieCard = ({ movie }) => {
             navigate(`/movies/${movie._id}`);
             scrollTo(0, 0);
           }}
-          className="bg-primary rounded-full px-4 py-2 cursor-pointer hover:bg-primary-dull tex-xs font-medium transition-all duration-300"
+          className="bg-primary rounded-full px-4 py-2 cursor-pointer hover:bg-primary-dull text-xs font-medium transition-all duration-300"
         >
           Buy Tickets
         </button>
