@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { assets } from "../../assets/assets";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +8,42 @@ const Login = () => {
     password: "",
     rememberMe: false,
   });
+
+  const handleInput = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // This is a placeholder for your actual login logic.
+  // In a real application, this function would likely make an API call
+  // to your backend for authentication.
+  const loginUser = async (email, password) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (email === "test@example.com" && password === "password123") {
+          resolve("Successfully logged in!");
+        } else {
+          reject(new Error("Invalid email or password."));
+        }
+      }, 2000); // Simulate a 2-second API call
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const { email, password } = formData; // Destructure email and password from formData
+
+    toast.promise(loginUser(email, password), {
+      loading: "Logging in...",
+      success: <b>Logged In!</b>,
+
+      error: (err) => <b>{err.message}</b>, // Display the error message from the rejected promise
+    });
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center mt-16">
@@ -23,7 +59,7 @@ const Login = () => {
             </p>
           </div>
 
-          <div className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Google Sign In Button */}
             <button className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg">
               <svg width="20" height="20" viewBox="0 0 24 24">
@@ -87,10 +123,12 @@ const Login = () => {
               <input
                 type="email"
                 name="email"
+                required
+                value={formData.email}
+                onChange={handleInput}
                 placeholder="Enter your email"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
-                required
               />
             </div>
 
@@ -131,10 +169,12 @@ const Login = () => {
               <input
                 type="password"
                 name="password"
+                value={formData.password}
+                onChange={handleInput}
+                required
                 placeholder="Enter your password"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
-                required
               />
             </div>
 
@@ -144,6 +184,8 @@ const Login = () => {
                 <input
                   type="checkbox"
                   name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleInput}
                   className="w-4 h-4 border-zinc-600 rounded focus:ring-2 bg-zinc-800 checked:bg-red-500 checked:border-red-500"
                   style={{
                     "--tw-ring-color": "#F84565",
@@ -163,7 +205,8 @@ const Login = () => {
 
             {/* Submit Button */}
             <button
-              className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] hover:opacity-90"
+              type="submit" // Ensure this is type="submit"
+              className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] hover:opacity-90 cursor-pointer"
               style={{
                 backgroundColor: "#F84565",
                 backgroundImage:
@@ -184,7 +227,7 @@ const Login = () => {
                 Sign up
               </Link>
             </p>
-          </div>
+          </form>
         </div>
       </div>
     </div>

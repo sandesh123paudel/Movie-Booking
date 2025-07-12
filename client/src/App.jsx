@@ -28,7 +28,7 @@ const App = () => {
 
   return (
     <>
-      <Toaster />
+      <Toaster position="bottom-left" reverseOrder={true} />
 
       {/* Conditionally render Navbar */}
       {!hideNavFooter && <Navbar />}
