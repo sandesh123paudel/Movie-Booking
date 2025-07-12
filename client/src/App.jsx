@@ -1,38 +1,59 @@
+// App.jsx
 import React from "react";
+import { Route, Routes, useLocation, Navigate } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
-import { Route, Routes, useLocation } from "react-router-dom";
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Movies from "./pages/Movies";
 import MovieDetails from "./pages/MovieDetails";
 import SeatLayout from "./pages/SeatLayout";
 import MyBookings from "./pages/MyBookings";
 import Favorite from "./pages/Favorite";
-import { Toaster } from "react-hot-toast";
-import Footer from "./components/Footer";
 import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
 import ForgetPassword from "./pages/auth/ForgetPassword";
+import ErrorPage from "./pages/404-Page";
+
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
-  const isAdminRoute = useLocation().pathname.startsWith("/admin");
-  const isAuthRoute = useLocation().pathname.startsWith("/auth");
+  const location = useLocation();
+
+  // Define paths where Navbar and Footer should NOT be shown
+  const noNavFooterPaths = ["/404"];
+
+  // Determine if current path is in the noNavFooterPaths list
+  const hideNavFooter = noNavFooterPaths.includes(location.pathname);
 
   return (
     <>
       <Toaster />
-      {!isAdminRoute && !isAuthRoute && <Navbar />}
+
+      {/* Conditionally render Navbar */}
+      {!hideNavFooter && <Navbar />}
+
       <Routes>
-        <Route path="/" element={<Home />}></Route>
-        <Route path="/movies" element={<Movies />}></Route>
-        <Route path="/movies/:id" element={<MovieDetails />}></Route>
-        <Route path="/movie/:id/:date" element={<SeatLayout />}></Route>
-        <Route path="/my-bookings" element={<MyBookings />}></Route>
-        <Route path="/favorite" element={<Favorite />}></Route>
-        <Route path="/auth/login" element={<Login />}></Route>
-        <Route path="/auth/register" element={<Register />}></Route>
-        <Route path="/auth/forgot-password" element={<ForgetPassword />} />
+        {/* Your app routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/movies" element={<Movies />} />
+        <Route path="/movies/:id" element={<MovieDetails />} />
+        <Route path="/movie/:id/:date" element={<SeatLayout />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/favorite" element={<Favorite />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
+
+        {/* Dedicated 404 page */}
+        <Route path="/404" element={<ErrorPage />} />
+
+        {/* Redirect all unknown routes to /404 */}
+        <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
-      {!isAdminRoute && !isAuthRoute && <Footer />}
+
+      {/* Conditionally render Footer */}
+      {!hideNavFooter && <Footer />}
     </>
   );
 };

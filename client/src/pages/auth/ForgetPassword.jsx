@@ -6,9 +6,9 @@ const ForgetPassword = () => {
   const [email, setEmail] = useState("");
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-zinc-900 rounded-2xl shadow-2xl p-6 sm:p-8 border border-zinc-800">
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+      <div className="w-full max-w-xl">
+        <div className=" rounded-2xl shadow-2xl p-6 sm:p-8 ">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
               Forgot Password?
@@ -73,7 +73,7 @@ const ForgetPassword = () => {
             <p className="text-center text-zinc-400 text-sm sm:text-base">
               Remember your password?{" "}
               <Link
-                to="/auth/login"
+                to="/login"
                 className="font-semibold hover:underline hover:opacity-80 transition-opacity"
                 style={{ color: "#F84565" }}
               >
@@ -81,18 +81,6 @@ const ForgetPassword = () => {
               </Link>
             </p>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex flex-col items-center mt-4 text-zinc-500 text-xs sm:text-sm">
-          <img
-            src={assets.logo}
-            alt="Moovie Booking - Logo"
-            className="w-36 h-auto mb-3 justify-center"
-          />
-          <p>
-            © {new Date().getFullYear()} Movie Booking. All rights reserved.
-          </p>
         </div>
       </div>
     </div>

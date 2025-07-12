@@ -10,10 +10,10 @@ const Login = () => {
   });
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center mt-16">
+      <div className="w-full max-w-xl">
         {/* Login Form */}
-        <div className="bg-zinc-900 rounded-2xl shadow-2xl p-6 sm:p-8 border border-zinc-800">
+        <div className="rounded-2xl shadow-2xl px-6 sm:px-8 ">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
               Welcome Back
@@ -153,7 +153,7 @@ const Login = () => {
                 <span className="text-zinc-300">Remember me</span>
               </label>
               <Link
-                to="/auth/forgot-password"
+                to="/forgot-password"
                 className="text-red-400 hover:text-red-300 font-medium hover:underline"
                 style={{ color: "#F84565" }}
               >
@@ -177,7 +177,7 @@ const Login = () => {
             <p className="text-center text-zinc-400 text-sm sm:text-base">
               Don&apos;t have an account?{" "}
               <Link
-                to={"/auth/register"}
+                to={"/register"}
                 className="font-semibold hover:underline hover:opacity-80 transition-opacity"
                 style={{ color: "#F84565" }}
               >
@@ -185,18 +185,6 @@ const Login = () => {
               </Link>
             </p>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex flex-col items-center mt-4 text-zinc-500 text-xs sm:text-sm">
-          <img
-            src={assets.logo}
-            alt="Moovie Booking- Logo"
-            className="w-36 h-auto mb-3 justify-center"
-          />
-          <p>
-            © {new Date().getFullYear()} Movie Booking. All rights reserved.
-          </p>
         </div>
       </div>
     </div>
