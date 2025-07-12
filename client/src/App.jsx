@@ -9,14 +9,17 @@ import MyBookings from "./pages/MyBookings";
 import Favorite from "./pages/Favorite";
 import { Toaster } from "react-hot-toast";
 import Footer from "./components/Footer";
+import Register from "./pages/auth/Register";
+import Login from "./pages/auth/Login";
 
 const App = () => {
   const isAdminRoute = useLocation().pathname.startsWith("/admin");
+  const isAuthRoute = useLocation().pathname.startsWith("/auth");
 
   return (
     <>
       <Toaster />
-      {!isAdminRoute && <Navbar />}
+      {!isAdminRoute && !isAuthRoute && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />}></Route>
         <Route path="/movies" element={<Movies />}></Route>
@@ -24,8 +27,10 @@ const App = () => {
         <Route path="/movie/:id/:date" element={<SeatLayout />}></Route>
         <Route path="/my-bookings" element={<MyBookings />}></Route>
         <Route path="/favorite" element={<Favorite />}></Route>
+        <Route path="/auth/login" element={<Login />}></Route>
+        <Route path="/auth/register" element={<Register />}></Route>
       </Routes>
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && !isAuthRoute && <Footer />}
     </>
   );
 };
