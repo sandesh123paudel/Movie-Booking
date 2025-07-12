@@ -11,6 +11,7 @@ import { Toaster } from "react-hot-toast";
 import Footer from "./components/Footer";
 import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
+import ForgetPassword from "./pages/auth/ForgetPassword";
 
 const App = () => {
   const isAdminRoute = useLocation().pathname.startsWith("/admin");
@@ -29,6 +30,7 @@ const App = () => {
         <Route path="/favorite" element={<Favorite />}></Route>
         <Route path="/auth/login" element={<Login />}></Route>
         <Route path="/auth/register" element={<Register />}></Route>
+        <Route path="/auth/forgot-password" element={<ForgetPassword />} />
       </Routes>
       {!isAdminRoute && !isAuthRoute && <Footer />}
     </>

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { assets } from "../../assets/assets";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Login = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -153,12 +152,13 @@ const Login = () => {
                 />
                 <span className="text-zinc-300">Remember me</span>
               </label>
-              <button
+              <Link
+                to="/auth/forgot-password"
                 className="text-red-400 hover:text-red-300 font-medium hover:underline"
                 style={{ color: "#F84565" }}
               >
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
             {/* Submit Button */}
