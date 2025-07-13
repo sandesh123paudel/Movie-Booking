@@ -66,7 +66,7 @@ export const registerUser = async (fullName, email, password) => {
 export const verifyEmail = async (token) => {
   try {
     console.log("Verifying email with token:", token); // Debug log
-    const response = await api.get(`/verify-email/${token}`);
+    const response = await api.patch(`/verify-email/${token}`);
     console.log("Verification response:", response.data); // Debug log
     return response.data;
   } catch (error) {

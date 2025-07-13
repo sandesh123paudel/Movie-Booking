@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/AuthContext"; // Adjust path as needed
-import { loginUser } from "../../api"; // Adjust path as needed for your API calls
+import { loginUser, sendVerificationEmail } from "../../api"; // Import sendVerificationEmail separately
 import toast from "react-hot-toast"; // Import toast
 
 const Login = () => {
@@ -61,13 +61,33 @@ const Login = () => {
         err.message || "An unexpected error occurred during login.";
       setError(errorMessage);
       toast.error(errorMessage);
+
+      // Check if error is related to email verification
+      if (
+        errorMessage.toLowerCase().includes("verify") ||
+        errorMessage.toLowerCase().includes("verification")
+      ) {
+        setShowVerificationPrompt(true);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyEmail = () => {
-    navigate("/verify-email");
+  const handleVerifyEmail = async () => {
+    try {
+      // Call API to send verification email - Fixed: Use the imported function
+      const response = await sendVerificationEmail(formData.email);
+      if (response.success) {
+        toast.success(response.message || "Verification email sent!");
+      } else {
+        throw new Error(
+          response.message || "Failed to send verification email."
+        );
+      }
+    } catch (err) {
+      toast.error(err.message || "Error sending verification email.");
+    }
   };
 
   const handleContinueWithoutVerification = () => {
@@ -179,7 +199,7 @@ const Login = () => {
                     onClick={handleVerifyEmail}
                     className="flex-1 h-10 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors duration-200 text-sm"
                   >
-                    Verify Email
+                    Send Verification Email
                   </button>
                   <button
                     type="button"

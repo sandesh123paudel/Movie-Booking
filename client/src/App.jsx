@@ -15,25 +15,34 @@ import Login from "./pages/auth/Login";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail"; // Import your new component
 import ErrorPage from "./pages/404-Page";
-
 import { Toaster } from "react-hot-toast";
-
 import { AuthProvider } from "./hooks/AuthContext";
 import PublicRoute from "./components/PublicRoute";
-import ProtectedRouteForUnverified from "./components/ProtectedRouteForUnverified"; // Import new protected route
 
 const App = () => {
   const location = useLocation();
 
   // Define paths where Navbar and Footer should NOT be shown
-  const noNavFooterPaths = ["/404"]; // You might want to add /verify-email here if you want it fullscreen
+  const noNavFooterPaths = ["/404", "/verify-email"]; // Added /verify-email for fullscreen experience
 
-  // Determine if current path is in the noNavFooterPaths list
-  const hideNavFooter = noNavFooterPaths.includes(location.pathname);
+  // Determine if current path is in the noNavFooterPaths list or starts with /verify-email
+  const hideNavFooter =
+    noNavFooterPaths.includes(location.pathname) ||
+    location.pathname.startsWith("/verify-email");
 
   return (
     <>
-      <Toaster position="bottom-left" reverseOrder={true} />
+      <Toaster
+        position="bottom-left"
+        reverseOrder={true}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#F84565",
+            color: "#fff",
+          },
+        }}
+      />
 
       <AuthProvider>
         {!hideNavFooter && <Navbar />}
@@ -52,10 +61,8 @@ const App = () => {
             <Route path="/forgot-password" element={<ForgetPassword />} />
           </Route>
 
-          {/* Route accessible ONLY if logged in BUT NOT verified */}
-          <Route element={<ProtectedRouteForUnverified />}>
-            <Route path="/verify-email" element={<VerifyEmail />} />
-          </Route>
+          {/* Email verification route - accessible to everyone */}
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
           {/* Routes accessible only if logged in AND VERIFIED */}
           {/* You might want a general ProtectedRoute for these too later */}
