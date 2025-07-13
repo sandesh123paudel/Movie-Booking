@@ -12,7 +12,7 @@ const generateToken = (id) => {
 // Register Controller
 exports.register = async (req, res) => {
   try {
-  const { fullName, email, password } = req.body;
+    const { fullName, email, password } = req.body;
 
     // Validate input
     if (!fullName || !email || !password) {
@@ -234,7 +234,7 @@ exports.login = async (req, res) => {
 
     const token = generateToken(existingUser._id);
 
-    await res.cookie("token", token, { maxAge: 1 * 24 * 60 * 60 *1000 });
+    await res.cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000 });
 
     // Remove password from response
     existingUser.password = undefined;

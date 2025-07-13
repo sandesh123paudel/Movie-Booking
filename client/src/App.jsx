@@ -13,72 +13,47 @@ import Favorite from "./pages/Favorite";
 import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
 import ForgetPassword from "./pages/auth/ForgetPassword";
-import VerifyEmail from "./pages/auth/VerifyEmail"; // Import your new component
 import ErrorPage from "./pages/404-Page";
+
 import { Toaster } from "react-hot-toast";
-import { AuthProvider } from "./hooks/AuthContext";
-import PublicRoute from "./components/PublicRoute";
 
 const App = () => {
   const location = useLocation();
 
   // Define paths where Navbar and Footer should NOT be shown
-  const noNavFooterPaths = ["/404", "/verify-email"]; // Added /verify-email for fullscreen experience
+  const noNavFooterPaths = ["/404"];
 
-  // Determine if current path is in the noNavFooterPaths list or starts with /verify-email
-  const hideNavFooter =
-    noNavFooterPaths.includes(location.pathname) ||
-    location.pathname.startsWith("/verify-email");
+  // Determine if current path is in the noNavFooterPaths list
+  const hideNavFooter = noNavFooterPaths.includes(location.pathname);
 
   return (
     <>
-      <Toaster
-        position="bottom-left"
-        reverseOrder={true}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#F84565",
-            color: "#fff",
-          },
-        }}
-      />
+      <Toaster position="bottom-left" reverseOrder={true} />
 
-      <AuthProvider>
-        {!hideNavFooter && <Navbar />}
+      {/* Conditionally render Navbar */}
+      {!hideNavFooter && <Navbar />}
 
-        <Routes>
-          {/* Public routes that everyone can access */}
-          <Route path="/" element={<Home />} />
-          <Route path="/movies" element={<Movies />} />
-          <Route path="/movies/:id" element={<MovieDetails />} />
-          {/* Add more general public routes here */}
+      <Routes>
+        {/* Your app routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/movies" element={<Movies />} />
+        <Route path="/movies/:id" element={<MovieDetails />} />
+        <Route path="/movie/:id/:date" element={<SeatLayout />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/favorite" element={<Favorite />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
 
-          {/* Routes accessible only if NOT logged in (Login, Register, Forgot Password) */}
-          <Route element={<PublicRoute />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgetPassword />} />
-          </Route>
+        {/* Dedicated 404 page */}
+        <Route path="/404" element={<ErrorPage />} />
 
-          {/* Email verification route - accessible to everyone */}
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+        {/* Redirect all unknown routes to /404 */}
+        <Route path="*" element={<Navigate to="/404" replace />} />
+      </Routes>
 
-          {/* Routes accessible only if logged in AND VERIFIED */}
-          {/* You might want a general ProtectedRoute for these too later */}
-          <Route path="/movie/:id/:date" element={<SeatLayout />} />
-          <Route path="/my-bookings" element={<MyBookings />} />
-          <Route path="/favorite" element={<Favorite />} />
-
-          {/* Dedicated 404 page */}
-          <Route path="/404" element={<ErrorPage />} />
-
-          {/* Redirect all unknown routes to /404 */}
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-
-        {!hideNavFooter && <Footer />}
-      </AuthProvider>
+      {/* Conditionally render Footer */}
+      {!hideNavFooter && <Footer />}
     </>
   );
 };

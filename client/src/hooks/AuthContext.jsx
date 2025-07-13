@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
   // Check if user is logged in on app start
   useEffect(() => {
@@ -31,6 +32,7 @@ export const AuthProvider = ({ children }) => {
           if (tokenPayload.exp > currentTime) {
             setUser(JSON.parse(userData));
             setIsAuthenticated(true);
+            setIsVerified(JSON.parse(userData).isEmailVerified);
           } else {
             // Token expired, clear storage
             localStorage.removeItem("token");
@@ -58,6 +60,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
     setIsAuthenticated(true);
+    setIsVerified(userData.isEmailVerified);
   };
 
   const register = (responseData) => {
@@ -67,8 +70,6 @@ export const AuthProvider = ({ children }) => {
 
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
-    setIsAuthenticated(true);
   };
 
   const logout = () => {
@@ -82,6 +83,7 @@ export const AuthProvider = ({ children }) => {
     user,
     isAuthenticated,
     loading,
+    isVerified,
     login,
     register,
     logout,
