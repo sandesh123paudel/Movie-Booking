@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { loginUser } from "../../api";
+import { useAuth } from "../../hooks/AuthContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +10,11 @@ const Login = () => {
     password: "",
     rememberMe: false,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleInput = (e) => {
     const { name, value, type, checked } = e.target;
@@ -17,32 +24,28 @@ const Login = () => {
     }));
   };
 
-  // This is a placeholder for your actual login logic.
-  // In a real application, this function would likely make an API call
-  // to your backend for authentication.
-  const loginUser = async (email, password) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (email === "test@example.com" && password === "password123") {
-          resolve("Successfully logged in!");
-        } else {
-          reject(new Error("Invalid email or password."));
-        }
-      }, 2000); // Simulate a 2-second API call
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    const { email, password } = formData; // Destructure email and password from formData
+    try {
+      const response = await loginUser(formData.email, formData.password);
 
-    toast.promise(loginUser(email, password), {
-      loading: "Logging in...",
-      success: <b>Logged In!</b>,
-
-      error: (err) => <b>{err.message}</b>, // Display the error message from the rejected promise
-    });
+      // Check if login was successful
+      if (response.success) {
+        login(response);
+        toast.success(response.message || "Logged in successfully!");
+        navigate("/");
+      } else {
+        throw new Error(response.message || "Login failed");
+      }
+    } catch (error) {
+      const errorMessage = error.message || "Login failed";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,7 +64,10 @@ const Login = () => {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Google Sign In Button */}
-            <button className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg">
+            <button
+              type="button"
+              className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg"
+            >
               <svg width="20" height="20" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
@@ -93,6 +99,13 @@ const Login = () => {
               </span>
               <div className="flex-1 h-px bg-zinc-700"></div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
 
             {/* Email Input */}
             <div className="relative">
@@ -129,6 +142,7 @@ const Login = () => {
                 placeholder="Enter your email"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
+                disabled={loading}
               />
             </div>
 
@@ -175,6 +189,7 @@ const Login = () => {
                 placeholder="Enter your password"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
+                disabled={loading}
               />
             </div>
 
@@ -191,6 +206,7 @@ const Login = () => {
                     "--tw-ring-color": "#F84565",
                     accentColor: "#F84565",
                   }}
+                  disabled={loading}
                 />
                 <span className="text-zinc-300">Remember me</span>
               </label>
@@ -205,15 +221,16 @@ const Login = () => {
 
             {/* Submit Button */}
             <button
-              type="submit" // Ensure this is type="submit"
-              className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] hover:opacity-90 cursor-pointer"
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] hover:opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               style={{
                 backgroundColor: "#F84565",
                 backgroundImage:
                   "linear-gradient(135deg, #F84565 0%, #D63854 100%)",
               }}
             >
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </button>
 
             {/* Sign Up Link */}
