@@ -1,53 +1,73 @@
 import React, { useState, useRef, useEffect } from "react";
 import { assets } from "../assets/assets"; // Assuming this path is correct
 import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
-import { MenuIcon, SearchIcon, XIcon, UserIcon } from "lucide-react";
+import { MenuIcon, SearchIcon, XIcon, UserIcon } from "lucide-react"; // UserIcon might be useful, but not directly used in the current profile circle
 import { useAuth } from "../hooks/AuthContext"; // Ensure this path is correct
+import toast from "react-hot-toast";
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // State for mobile menu
+  const [isProfileOpen, setIsProfileOpen] = useState(false); // State for desktop profile dropdown
   const { user, isAuthenticated, logout } = useAuth(); // Destructure user, isAuthenticated, and logout
   const navigate = useNavigate(); // Initialize useNavigate hook for redirection
-  const profileRef = useRef(null);
+  const profileRef = useRef(null); // Ref for clicking outside the profile dropdown
 
-  const handleLogout = () => {
-    logout(); // Call the logout function from AuthContext
-    setIsOpen(false); // Close the mobile menu after logging out
-    setIsProfileOpen(false); // Close the profile dropdown
-    navigate("/login"); // Redirect to the login page after logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged Out Successfully!");
+      setIsProfileOpen(false); // Close profile dropdown
+      setIsOpen(false); // Close mobile menu (if open)
+      navigate("/login"); // Redirect to login page
+    } catch (error) {
+      toast.error("Logout Failed. Please try again.");
+      console.error("Logout error:", error);
+    }
   };
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // If profile dropdown is open AND the click is outside the profile dropdown area
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
       }
     };
 
+    // Add event listener on mount
     document.addEventListener("mousedown", handleClickOutside);
+    // Cleanup event listener on unmount
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
 
   // Get user initials for profile circle
   const getUserInitials = () => {
     if (user?.fullName) {
+      // Takes first letter of each word in full name
       return user.fullName
         .split(" ")
         .map((name) => name[0])
         .join("")
         .toUpperCase();
     } else if (user?.email) {
+      // Takes first letter of email if full name is not available
       return user.email[0].toUpperCase();
     }
-    return "U";
+    return "U"; // Default initial if no user info
+  };
+
+  const handleLinkClick = () => {
+    window.scrollTo(0, 0); // Scroll to top
+    setIsOpen(false); // Close mobile menu
+    setIsProfileOpen(false); // Close profile dropdown (important for desktop)
   };
 
   return (
-    <div className="fixed top-0 left-0 z-50 w-full flex justify-between items-center px-6 md:px-16 lg:px-36 py-5">
+    <div className="fixed top-0 left-0 z-50 w-full flex justify-between items-center px-6 md:px-16 lg:px-36 py-5 bg-black/70 backdrop-blur-sm">
+      {" "}
+      {/* Added background for fixed navbar */}
       <Link to="/" className="max-md:flex-1">
         <img
           src={assets.logo}
@@ -55,68 +75,78 @@ const Navbar = () => {
           className="w-36 h-auto"
         />
       </Link>
+      {/* Main Navigation Links (for both desktop and mobile) */}
       <div
         className={`max-md:absolute max-md:top-0 max-md:left-0 max-md:font-medium max-md:text-lg z-50 flex flex-col md:flex-row items-center max-md:justify-center gap-8 min-md:px-8 py-3 max-md:h-screen min-md:rounded-full backdrop-blur bg-black/70 md:bg-white/10 md:border border-gray-300/20 overflow-hidden transition-[width] duration-300 ${
           isOpen ? "max-md:w-full" : "max-md:w-0"
         } `}
       >
+        {/* Close button for mobile menu */}
         <XIcon
-          className="md:hidden absolute top-6 right-6 w-6 h-6 cursor-pointer text-white" // Added text-white for visibility
-          onClick={() => setIsOpen(!isOpen)}
+          className="md:hidden absolute top-6 right-6 w-6 h-6 cursor-pointer text-white"
+          onClick={() => setIsOpen(false)} // Directly set to false
         />
+
+        {/* Navigation Links */}
         <Link
-          onClick={() => {
-            window.scrollTo(0, 0); // Corrected to window.scrollTo
-            setIsOpen(false);
-          }}
+          onClick={handleLinkClick}
           to="/"
-          className="text-white md:text-inherit" // Ensure text color is consistent
+          className="text-white md:text-inherit"
         >
           Home
         </Link>
         <Link
-          onClick={() => {
-            window.scrollTo(0, 0);
-            setIsOpen(false);
-          }}
+          onClick={handleLinkClick}
           to="/movies"
           className="text-white md:text-inherit"
         >
           Movies
         </Link>
         <Link
-          onClick={() => {
-            window.scrollTo(0, 0);
-            setIsOpen(false);
-          }}
+          onClick={handleLinkClick}
           to="/theaters"
           className="text-white md:text-inherit"
         >
           Theaters
         </Link>
         <Link
-          onClick={() => {
-            window.scrollTo(0, 0);
-            setIsOpen(false);
-          }}
+          onClick={handleLinkClick}
           to="/favorite"
           className="text-white md:text-inherit"
         >
           Favorite
         </Link>
 
-        {/* --- Display user or login/register based on authentication status (Mobile Menu) --- */}
+        {/* Conditional Link for Verified vs. Unverified Users in mobile menu only, desktop uses profile dropdown */}
+        {isAuthenticated && (
+          <>
+            {user?.isEmailVerified ? (
+              <Link
+                onClick={handleLinkClick}
+                to="/my-bookings"
+                className="md:hidden text-white"
+              >
+                My Bookings
+              </Link>
+            ) : (
+              <Link
+                onClick={handleLinkClick}
+                to="/verify-email"
+                className="md:hidden text-yellow-400 font-semibold"
+              >
+                Verify Email
+              </Link>
+            )}
+          </>
+        )}
+
+        {/* Mobile menu specific auth buttons (Login/Register/Logout) */}
         <div className="md:hidden flex flex-col items-center gap-4 mt-8">
           {isAuthenticated ? (
             <>
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  {getUserInitials()}
-                </div>
-                <span className="text-white text-base font-semibold text-center">
-                  {user?.fullName || user?.email}
-                </span>
-              </div>
+              <span className="text-white text-base font-semibold text-center">
+                Welcome, {user?.fullName || user?.email}!
+              </span>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-primary hover:bg-primary-dull transition font-medium rounded-full cursor-pointer text-white w-fit"
@@ -128,14 +158,14 @@ const Navbar = () => {
             <>
               <Link
                 to="/login"
-                onClick={() => setIsOpen(false)}
+                onClick={handleLinkClick}
                 className="text-white px-4 py-2 bg-primary hover:bg-primary-dull transition font-medium rounded-full cursor-pointer w-fit"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                onClick={() => setIsOpen(false)}
+                onClick={handleLinkClick}
                 className="text-white px-4 py-2 bg-primary hover:bg-primary-dull transition font-medium rounded-full cursor-pointer w-fit"
               >
                 Register
@@ -143,11 +173,11 @@ const Navbar = () => {
             </>
           )}
         </div>
-        {/* --------------------------------------------------------------------------------- */}
       </div>
+      {/* Right side of Navbar (Search, Profile/Login button) */}
       <div className="flex items-center gap-8">
         <SearchIcon className="max-md:hidden w-6 h-6 cursor-pointer text-white" />
-        {/* --- Conditional rendering for desktop view --- */}
+
         {isAuthenticated ? (
           <div className="relative" ref={profileRef}>
             {/* Profile Circle */}
@@ -160,18 +190,42 @@ const Navbar = () => {
 
             {/* Dropdown Menu */}
             {isProfileOpen && (
-              <div className="absolute right-0 top-12 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-48 z-50">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.fullName || user?.email}
-                  </p>
-                  {user?.email && user?.fullName && (
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                  )}
-                </div>
+              <div className="absolute right-0 top-12 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 py-2 min-w-48 z-50 overflow-hidden">
+                <p className="px-4 py-2 text-zinc-300 text-sm border-b border-zinc-700">
+                  Welcome,{" "}
+                  <span className="font-semibold text-white">
+                    {user?.fullName || user?.email.split("@")[0]}
+                  </span>
+                </p>
+                {user?.isEmailVerified ? (
+                  <>
+                    <Link
+                      to="/my-bookings"
+                      onClick={handleLinkClick}
+                      className="block px-4 py-2 text-white hover:bg-zinc-700 transition duration-200"
+                    >
+                      My Bookings
+                    </Link>
+                    <Link
+                      to="/profile"
+                      onClick={handleLinkClick}
+                      className="block px-4 py-2 text-white hover:bg-zinc-700 transition duration-200"
+                    >
+                      Profile Settings
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    to="/verify-email"
+                    onClick={handleLinkClick}
+                    className="block px-4 py-2 text-yellow-400 hover:bg-zinc-700 transition duration-200 font-semibold"
+                  >
+                    Verify Email
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+                  className="w-full text-left px-4 py-2 text-red-500 hover:bg-zinc-700 transition duration-200 border-t border-zinc-700"
                 >
                   Logout
                 </button>
@@ -185,13 +239,11 @@ const Navbar = () => {
             </button>
           </Link>
         )}
-        {/* ------------------------------------------- */}
       </div>
-
-      {/* For Mobile Device */}
+      {/* Mobile Menu Icon */}
       <MenuIcon
         className="max-md:ml-4 md:hidden w-8 h-8 cursor-pointer text-white"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(true)} // Open mobile menu
       />
     </div>
   );

@@ -1,19 +1,79 @@
 import React, { useState } from "react";
-import { assets } from "../../assets/assets";
-import { Link } from "react-router-dom";
+import { assets } from "../../assets/assets"; // Assuming this path is correct
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/AuthContext"; // Adjust path as needed
+import { registerUser } from "../../api"; // Ensure this path is correct for your api.js
+import toast from "react-hot-toast"; // Import toast for notifications
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    fullname: "",
+    fullName: "", // Corrected to match your api.js function signature
     email: "",
     password: "",
     agreeTerms: false,
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const { register } = useAuth(); // Destructure the register function from AuthContext
+  const navigate = useNavigate();
+
+  const handleInput = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(""); // Clear previous errors
+    setLoading(true); // Set loading state
+
+    // Basic client-side validation
+    if (!formData.agreeTerms) {
+      setError("You must agree to the Terms of Service and Privacy Policy.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Call registerUser from your API, passing all required formData fields
+      const response = await registerUser(
+        formData.fullName, // Pass fullName
+        formData.email,
+        formData.password
+      );
+
+      // Assuming your backend responds with a 'success' boolean and 'message'
+      // And also includes user data and token if registration implies immediate login
+      if (response.success) {
+        register(response); // Use the register function from AuthContext to update state and localStorage
+        toast.success(
+          response.message ||
+            "Registration successful! Please verify your email."
+        );
+        navigate("/verify-email"); // Navigate to the verify email page
+      } else {
+        // If backend indicates failure but no error was thrown
+        throw new Error(response.message || "Registration failed.");
+      }
+    } catch (err) {
+      // Catch errors from the API call or custom errors thrown above
+      const errorMessage =
+        err.message || "An unexpected error occurred during registration.";
+      setError(errorMessage);
+    } finally {
+      setLoading(false); // Always reset loading state
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center mt-16">
       <div className="w-full max-w-xl">
-        {/* Login Form */}
+        {/* Register Form */}
         <div className="rounded-2xl shadow-2xl p-6 sm:p-8 ">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
@@ -23,10 +83,15 @@ const Register = () => {
               Join us and start booking your favorite movies
             </p>
           </div>
-
-          <div className="space-y-6">
-            {/* Google Sign Up Button */}
-            <button className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {" "}
+            {/* Wrap content in a form and bind onSubmit */}
+            {/* Google Sign Up Button (Placeholder, no functionality added here) */}
+            <button
+              type="button" // Important: set type="button" to prevent form submission
+              className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg"
+              disabled={loading} // Disable if loading
+            >
               <svg width="20" height="20" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
@@ -49,7 +114,6 @@ const Register = () => {
                 Continue with Google
               </span>
             </button>
-
             {/* Divider */}
             <div className="flex items-center gap-4">
               <div className="flex-1 h-px bg-zinc-700"></div>
@@ -58,7 +122,12 @@ const Register = () => {
               </span>
               <div className="flex-1 h-px bg-zinc-700"></div>
             </div>
-
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
             {/* Full Name Input */}
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
@@ -87,14 +156,16 @@ const Register = () => {
               </div>
               <input
                 type="text"
-                name="fullname"
+                name="fullName" // Corrected name to match formData state and api.js
+                value={formData.fullName} // Bind value
+                onChange={handleInput}
                 placeholder="Enter your full name"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
                 required
+                disabled={loading}
               />
             </div>
-
             {/* Email Input */}
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
@@ -124,13 +195,15 @@ const Register = () => {
               <input
                 type="email"
                 name="email"
+                value={formData.email} // Bind value
+                onChange={handleInput}
                 placeholder="Enter your email"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
                 required
+                disabled={loading}
               />
             </div>
-
             {/* Password Input */}
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
@@ -168,24 +241,29 @@ const Register = () => {
               <input
                 type="password"
                 name="password"
+                value={formData.password} // Bind value
+                onChange={handleInput}
                 placeholder="Create a password"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
                 required
+                disabled={loading}
               />
             </div>
-
             {/* Terms and Conditions */}
             <div className="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
                 name="agreeTerms"
+                checked={formData.agreeTerms} // Bind checked state
+                onChange={handleInput}
                 className="w-4 h-4 mt-0.5 border-zinc-600 rounded focus:ring-2 bg-zinc-800 checked:bg-red-500 checked:border-red-500"
                 style={{
                   "--tw-ring-color": "#F84565",
                   accentColor: "#F84565",
                 }}
                 required
+                disabled={loading}
               />
               <label className="text-zinc-300 leading-5">
                 I agree to the{" "}
@@ -206,19 +284,19 @@ const Register = () => {
                 </button>
               </label>
             </div>
-
             {/* Submit Button */}
             <button
-              className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] hover:opacity-90"
+              type="submit" // Set type to submit for form submission
+              className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] hover:opacity-90 cursor-pointer"
               style={{
                 backgroundColor: "#F84565",
                 backgroundImage:
                   "linear-gradient(135deg, #F84565 0%, #D63854 100%)",
               }}
+              disabled={loading} // Disable button while loading
             >
-              Create Account
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
-
             {/* Sign In Link */}
             <p className="text-center text-zinc-400 text-sm sm:text-base">
               Already have an account?{" "}
@@ -230,7 +308,8 @@ const Register = () => {
                 Sign in
               </Link>
             </p>
-          </div>
+          </form>{" "}
+          {/* Close the form tag */}
         </div>
       </div>
     </div>
