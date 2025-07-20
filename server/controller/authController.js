@@ -2,7 +2,10 @@ import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import transporter from "../config/nodemailer.js";
-import { WELCOME_MESSAGE_TEMPLATE } from "../config/emailTemplate.js";
+import {
+  EMAIL_VERIFY_TEMPLATE,
+  WELCOME_MESSAGE_TEMPLATE,
+} from "../config/emailTemplate.js";
 import { validationResult } from "express-validator";
 
 const generateToken = (userId) => {
@@ -81,6 +84,40 @@ export const login = async (req, res) => {
     setTokenCookie(res, token);
 
     res.json({ success: true, message: "User LoggedIn successfully" });
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
+};
+
+export const sendVerificationCode = async (req, res) => {
+  try {
+    const { userId } = req.userId;
+    const user = await userModel.findOne(userId);
+
+    if (user.isVerified) {
+      return res.json({ success: false, message: "User Already Verified" });
+    }
+    const otp = Math.floor(10000 + Math.random() * 900000);
+    user.verifyOtp = otp;
+    user.verifyOtpExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+
+    const mailOptions = {
+      from: `"VERIFY-ACCOUNT" <${process.env.EMAIL_ADDRESS}>`,
+
+      to: user.email,
+      subject: "Account Verification OTP",
+      // text: `Your OTP is: ${otp}. Vreify your account with this OTP`,
+      html: EMAIL_VERIFY_TEMPLATE.replace("{{otp}}", otp).replace(
+        "{{email}}",
+        user.email
+      ),
+    };
+    await transporter.sendMail(mailOptions);
+    await user.save();
+    return res.json({
+      success: true,
+      message: "Verification Code has been successfully sent to the email",
+    });
   } catch (error) {
     return res.json({ success: false, message: error.message });
   }
