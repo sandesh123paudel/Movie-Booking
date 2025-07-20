@@ -14,7 +14,6 @@ import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ErrorPage from "./pages/404-Page";
-
 import { Toaster } from "react-hot-toast";
 
 const App = () => {
@@ -23,12 +22,24 @@ const App = () => {
   // Define paths where Navbar and Footer should NOT be shown
   const noNavFooterPaths = ["/404"];
 
-  // Determine if current path is in the noNavFooterPaths list
-  const hideNavFooter = noNavFooterPaths.includes(location.pathname);
+  // Determine if current path is in the noNavFooterPaths list or starts with /verify-email
+  const hideNavFooter =
+    noNavFooterPaths.includes(location.pathname) ||
+    location.pathname.startsWith("/verify-email");
 
   return (
     <>
-      <Toaster position="bottom-left" reverseOrder={true} />
+      <Toaster
+        position="bottom-left"
+        reverseOrder={true}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#F84565",
+            color: "#fff",
+          },
+        }}
+      />
 
       {/* Conditionally render Navbar */}
       {!hideNavFooter && <Navbar />}
