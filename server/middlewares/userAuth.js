@@ -13,6 +13,7 @@ const userAuth = (req, res, next) => {
     } else {
       res.json({ success: false, message: "Not Authorized. Login Again" });
     }
+    next();
   } catch (error) {
     res.json({ success: false, message: error.message });
   }

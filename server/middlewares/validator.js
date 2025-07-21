@@ -40,3 +40,26 @@ export const loginValidator = () => {
       .withMessage("Password must be at least 6 characters long"),
   ];
 };
+
+export const resetPasswordValidator = () => {
+  return [
+    body("email")
+      .trim()
+      .notEmpty()
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Invalid email format"),
+    body("otp")
+      .trim()
+      .notEmpty()
+      .withMessage("OTP Required")
+      .isLength({ min: 6, max: 6 })
+      .withMessage("OTP should be of 6 number"),
+
+    body("newPassword")
+      .notEmpty()
+      .withMessage("New Password is required")
+      .isLength({ min: 6 })
+      .withMessage("New Password must be at least 6 characters long"),
+  ];
+};

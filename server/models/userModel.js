@@ -5,10 +5,10 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   isVerified: { type: Boolean, default: false },
-  verifyOtp: { type: Number, default: 0 },
-  verifyOtpExpiresAt: { type: String, default: "" },
-  resetOtp: { type: Number, default: 0 },
-  resetOtpExpiresAt: { type: String, default: "" },
+  verifyOtp: { type: String, default: "" },
+  verifyOtpExpiresAt: { type: Number, default: 0 },
+  resetOtp: { type: String, default: "" },
+  resetOtpExpiresAt: { type: Number, default: 0 },
 });
 
 const userModel = mongoose.model("User", userSchema);
