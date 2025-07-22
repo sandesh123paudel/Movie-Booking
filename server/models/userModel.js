@@ -5,6 +5,12 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   isVerified: { type: Boolean, default: false },
+  role: {
+    type: String,
+    enum: ["admin", "user"],
+    default: "user",
+    required: true,
+  },
   verifyOtp: { type: String, default: "" },
   verifyOtpExpiresAt: { type: Number, default: 0 },
   resetOtp: { type: String, default: "" },

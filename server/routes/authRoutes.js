@@ -5,6 +5,7 @@ import {
   resetPasswordValidator,
 } from "../middlewares/validator.js";
 import {
+  createAdminUser,
   isAuthenticated,
   login,
   logout,
@@ -18,6 +19,7 @@ import userAuth from "../middlewares/userAuth.js";
 
 const authRouter = express.Router();
 
+authRouter.post("/create-admin", createAdminUser);
 authRouter.post("/register", registerValidator(), register);
 authRouter.post("/login", loginValidator(), login);
 authRouter.post("/send-verification-email", userAuth, sendVerificationCode);

@@ -24,6 +24,31 @@ const setTokenCookie = (res, token) => {
   });
 };
 
+//Create  an admin
+export const createAdminUser = async (req, res) => {
+  const admin = await userModel.findOne({ email: "admin@quickshow.com" });
+  if (admin) {
+    return res.json({
+      success: false,
+      mesage: "Admin with this email already exists",
+    });
+  }
+  const hashedPassword = await bcrypt.hash("Admin@123", 10);
+
+  const adminUser = new userModel({
+    fullName: "Quickshow Admin",
+    email: "admin@quickshow.com",
+    password: hashedPassword,
+    role: "admin",
+    isVerified: true,
+  });
+  await adminUser.save();
+  return res.json({
+    success: true,
+    mesage: "Admin created successfully",
+  });
+};
+
 //Registraion API
 export const register = async (req, res) => {
   //Check the validation using express validator
