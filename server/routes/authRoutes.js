@@ -7,6 +7,7 @@ import {
 import {
   isAuthenticated,
   login,
+  logout,
   register,
   sendResetCode,
   sendVerificationCode,
@@ -24,5 +25,6 @@ authRouter.post("/verify-email", userAuth, verifyEmail);
 authRouter.get("/is-auth", userAuth, isAuthenticated);
 authRouter.post("/send-passwordReset-email", sendResetCode);
 authRouter.post("/reset-password", resetPasswordValidator(), verifyResetCode);
+authRouter.post("/logout", logout);
 
 export default authRouter;

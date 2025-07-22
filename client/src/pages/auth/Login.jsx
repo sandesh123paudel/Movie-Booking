@@ -12,34 +12,46 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [isLoading, setIsLoading] = useState("");
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    let loginToastId; // Declare a variable to hold the toast ID
+
     try {
-      setIsLoading(true);
+      // Show loading toast and store its ID
+      loginToastId = toast.loading("Logging in..."); // This returns a toastId
+
       axios.defaults.withCredentials = true;
 
       const { data } = await axios.post(backendUrl + "/api/auth/login", {
         email,
         password,
       });
-      console.log({ data });
 
       if (data.success) {
         setIsLoggedIn(true);
-        toast.success(data.message);
+        // Update the loading toast to a success toast
+        toast.success(data.message, { id: loginToastId });
         getUserData();
-        setIsLoading(false);
         navigate("/");
       } else {
-        toast.error(data.message);
+        // Update the loading toast to an error toast
+        toast.error(data.message, { id: loginToastId });
       }
     } catch (error) {
-      toast.error(error.message);
+      // If an error occurs (e.g., network error), dismiss/update the toast to error
+      if (loginToastId) {
+        // Check if toastId was set
+        toast.error(error.message || "An unexpected error occurred.", {
+          id: loginToastId,
+        });
+      } else {
+        // Fallback if toastId wasn't set for some reason (shouldn't happen here)
+        toast.error(error.message || "An unexpected error occurred.");
+      }
     }
   };
+
   useEffect(() => {
     isLoggedIn && navigate("/");
   }, [isLoggedIn, navigate]);
