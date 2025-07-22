@@ -1,49 +1,48 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import axios from "axios";
+import { AppContent } from "../../context/AppContext";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false,
-  });
+  const navigate = useNavigate();
+  axios.defaults.withCredentials = true;
+  const { backendUrl, isLoggedIn, setIsLoggedIn, getUserData } =
+    useContext(AppContent);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleInput = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  const [isLoading, setIsLoading] = useState("");
 
-  // This is a placeholder for your actual login logic.
-  // In a real application, this function would likely make an API call
-  // to your backend for authentication.
-  const loginUser = async (email, password) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (email === "test@example.com" && password === "password123") {
-          resolve("Successfully logged in!");
-        } else {
-          reject(new Error("Invalid email or password."));
-        }
-      }, 2000); // Simulate a 2-second API call
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { email, password } = formData; // Destructure email and password from formData
+    try {
+      setIsLoading(true);
+      axios.defaults.withCredentials = true;
 
-    toast.promise(loginUser(email, password), {
-      loading: "Logging in...",
-      success: <b>Logged In!</b>,
+      const { data } = await axios.post(backendUrl + "/api/auth/login", {
+        email,
+        password,
+      });
+      console.log({ data });
 
-      error: (err) => <b>{err.message}</b>, // Display the error message from the rejected promise
-    });
+      if (data.success) {
+        setIsLoggedIn(true);
+        toast.success(data.message);
+        getUserData();
+        setIsLoading(false);
+        navigate("/");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
+  useEffect(() => {
+    isLoggedIn && navigate("/");
+  }, [isLoggedIn, navigate]);
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center mt-16">
@@ -124,8 +123,8 @@ const Login = () => {
                 type="email"
                 name="email"
                 required
-                value={formData.email}
-                onChange={handleInput}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
@@ -169,8 +168,8 @@ const Login = () => {
               <input
                 type="password"
                 name="password"
-                value={formData.password}
-                onChange={handleInput}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Enter your password"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
@@ -184,8 +183,6 @@ const Login = () => {
                 <input
                   type="checkbox"
                   name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleInput}
                   className="w-4 h-4 border-zinc-600 rounded focus:ring-2 bg-zinc-800 checked:bg-red-500 checked:border-red-500"
                   style={{
                     "--tw-ring-color": "#F84565",
@@ -195,7 +192,7 @@ const Login = () => {
                 <span className="text-zinc-300">Remember me</span>
               </label>
               <Link
-                to="/forgot-password"
+                to="/reset-password"
                 className="text-red-400 hover:text-red-300 font-medium hover:underline"
                 style={{ color: "#F84565" }}
               >

@@ -54,7 +54,7 @@ const App = () => {
         <Route path="/favorite" element={<Favorite />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgetPassword />} />
+        <Route path="/reset-password" element={<ForgetPassword />} />
 
         {/* Dedicated 404 page */}
         <Route path="/404" element={<ErrorPage />} />
