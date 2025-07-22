@@ -94,13 +94,13 @@ export const login = async (req, res) => {
 //Send Veriy Email
 export const sendVerificationCode = async (req, res) => {
   try {
-    const { userId } = req.userId;
-    const user = await userModel.findOne(userId);
+    const userId = req.userId;
+    const user = await userModel.findById(userId);
 
     if (user.isVerified) {
       return res.json({ success: false, message: "User Already Verified" });
     }
-    const otp = Math.floor(10000 + Math.random() * 900000);
+    const otp = Math.floor(100000 + Math.random() * 900000);
     user.verifyOtp = otp;
     user.verifyOtpExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
 

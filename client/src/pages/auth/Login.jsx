@@ -9,18 +9,18 @@ const Login = () => {
   axios.defaults.withCredentials = true;
   const { backendUrl, isLoggedIn, setIsLoggedIn, getUserData } =
     useContext(AppContent);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // New loading state
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Set loading to true when submission starts
 
-    let loginToastId; // Declare a variable to hold the toast ID
+    let loginToastId = toast.loading("Logging in..."); // Show loading toast and store its ID
 
     try {
-      // Show loading toast and store its ID
-      loginToastId = toast.loading("Logging in..."); // This returns a toastId
-
       axios.defaults.withCredentials = true;
 
       const { data } = await axios.post(backendUrl + "/api/auth/login", {
@@ -32,7 +32,7 @@ const Login = () => {
         setIsLoggedIn(true);
         // Update the loading toast to a success toast
         toast.success(data.message, { id: loginToastId });
-        getUserData();
+        await getUserData(); // Ensure user data is fetched
         navigate("/");
       } else {
         // Update the loading toast to an error toast
@@ -40,15 +40,15 @@ const Login = () => {
       }
     } catch (error) {
       // If an error occurs (e.g., network error), dismiss/update the toast to error
-      if (loginToastId) {
-        // Check if toastId was set
-        toast.error(error.message || "An unexpected error occurred.", {
+      toast.error(
+        error.response?.data?.message ||
+          "An unexpected error occurred. Please try again.",
+        {
           id: loginToastId,
-        });
-      } else {
-        // Fallback if toastId wasn't set for some reason (shouldn't happen here)
-        toast.error(error.message || "An unexpected error occurred.");
-      }
+        }
+      );
+    } finally {
+      setIsLoading(false); // Always set loading to false after the process completes
     }
   };
 
@@ -72,7 +72,11 @@ const Login = () => {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Google Sign In Button */}
-            <button className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg">
+            <button
+              type="button" // Use type="button" to prevent form submission
+              className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg"
+              disabled={isLoading} // Disable button when loading
+            >
               <svg width="20" height="20" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
@@ -140,6 +144,7 @@ const Login = () => {
                 placeholder="Enter your email"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
+                disabled={isLoading} // Disable input when loading
               />
             </div>
 
@@ -186,6 +191,7 @@ const Login = () => {
                 placeholder="Enter your password"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
+                disabled={isLoading} // Disable input when loading
               />
             </div>
 
@@ -200,6 +206,7 @@ const Login = () => {
                     "--tw-ring-color": "#F84565",
                     accentColor: "#F84565",
                   }}
+                  disabled={isLoading} // Disable checkbox when loading
                 />
                 <span className="text-zinc-300">Remember me</span>
               </label>
@@ -207,6 +214,7 @@ const Login = () => {
                 to="/reset-password"
                 className="text-red-400 hover:text-red-300 font-medium hover:underline"
                 style={{ color: "#F84565" }}
+                // You might consider disabling this if `isLoading` true, depending on desired UX
               >
                 Forgot password?
               </Link>
@@ -221,8 +229,9 @@ const Login = () => {
                 backgroundImage:
                   "linear-gradient(135deg, #F84565 0%, #D63854 100%)",
               }}
+              disabled={isLoading} // Disable button when loading
             >
-              Sign In
+              {isLoading ? "Signing In..." : "Sign In"} {/* Conditional text */}
             </button>
 
             {/* Sign Up Link */}
@@ -232,6 +241,7 @@ const Login = () => {
                 to={"/register"}
                 className="font-semibold hover:underline hover:opacity-80 transition-opacity"
                 style={{ color: "#F84565" }}
+                // You might consider disabling this if `isLoading` true, depending on desired UX
               >
                 Sign up
               </Link>

@@ -1,19 +1,76 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { assets } from "../../assets/assets";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { AppContent } from "../../context/AppContext";
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    fullname: "",
-    email: "",
-    password: "",
-    agreeTerms: false,
-  });
+  const navigate = useNavigate();
+  axios.defaults.withCredentials = true;
+
+  const { backendUrl, isLoggedIn } = useContext(AppContent);
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // New loading state
+
+  const handleSubmitt = async (e) => {
+    e.preventDefault();
+    setIsLoading(true); // Set loading to true when submission starts
+    const loadingToastId = toast.loading("Registering your account...");
+
+    try {
+      const { data } = await axios.post(backendUrl + "/api/auth/register", {
+        fullName,
+        email,
+        password,
+      });
+
+      if (data.success) {
+        toast.dismiss(loadingToastId);
+        toast.success("Account registered successfully.");
+
+        // Send verification email
+        toast.loading("Sending verification email...", { id: "emailVerify" }); // New loading toast for email
+        const verifyData = await axios.post(
+          backendUrl + "/api/auth/send-verification-email",
+          {},
+          { withCredentials: true }
+        );
+
+        if (verifyData.data.success) {
+          toast.dismiss("emailVerify");
+          toast.success("Verification email sent!");
+          navigate("/email-verify", { state: { email } });
+        } else if (verifyData.data.success === false) {
+          toast.dismiss("emailVerify");
+          toast.error("Failed to send verification email.");
+        } else {
+          toast.dismiss("emailVerify");
+          toast.error(data.message); // If there's a different message from the server
+        }
+      } else {
+        toast.dismiss(loadingToastId);
+        toast.error(data.message || "Registration failed."); // Display server message or a generic one
+      }
+    } catch (error) {
+      toast.dismiss(loadingToastId);
+      toast.dismiss("emailVerify"); // Dismiss email verification toast if it was shown
+      toast.error(error.response?.data?.message || error.message); // Display error message from response or generic
+    } finally {
+      setIsLoading(false); // Set loading to false after the process completes (success or failure)
+    }
+  };
+
+  useEffect(() => {
+    isLoggedIn && navigate("/");
+  }, [isLoggedIn, navigate]);
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center mt-16">
       <div className="w-full max-w-xl">
-        {/* Login Form */}
         <div className="rounded-2xl shadow-2xl p-6 sm:p-8 ">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
@@ -24,9 +81,12 @@ const Register = () => {
             </p>
           </div>
 
-          <div className="space-y-6">
-            {/* Google Sign Up Button */}
-            <button className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg">
+          <form className="space-y-6" onSubmit={handleSubmitt}>
+            <button
+              type="button"
+              className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg"
+              disabled={isLoading} // Disable button when loading
+            >
               <svg width="20" height="20" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
@@ -50,7 +110,6 @@ const Register = () => {
               </span>
             </button>
 
-            {/* Divider */}
             <div className="flex items-center gap-4">
               <div className="flex-1 h-px bg-zinc-700"></div>
               <span className="text-xs sm:text-sm text-zinc-500 font-medium whitespace-nowrap">
@@ -59,7 +118,6 @@ const Register = () => {
               <div className="flex-1 h-px bg-zinc-700"></div>
             </div>
 
-            {/* Full Name Input */}
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
                 <svg
@@ -82,20 +140,24 @@ const Register = () => {
                     r="4"
                     stroke="currentColor"
                     strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </div>
               <input
                 type="text"
-                name="fullname"
+                name="fullName"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 placeholder="Enter your full name"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
                 required
+                disabled={isLoading} // Disable input when loading
               />
             </div>
 
-            {/* Email Input */}
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
                 <svg
@@ -124,14 +186,16 @@ const Register = () => {
               <input
                 type="email"
                 name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
                 required
+                disabled={isLoading} // Disable input when loading
               />
             </div>
 
-            {/* Password Input */}
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
                 <svg
@@ -172,10 +236,12 @@ const Register = () => {
                 className="w-full h-12 pl-12 pr-4 bg-zinc-800 border border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 text-sm sm:text-base text-white placeholder-zinc-400"
                 style={{ "--tw-ring-color": "#F84565" }}
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading} // Disable input when loading
               />
             </div>
 
-            {/* Terms and Conditions */}
             <div className="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
@@ -185,7 +251,7 @@ const Register = () => {
                   "--tw-ring-color": "#F84565",
                   accentColor: "#F84565",
                 }}
-                required
+                disabled={isLoading} // Disable checkbox when loading
               />
               <label className="text-zinc-300 leading-5">
                 I agree to the{" "}
@@ -193,6 +259,7 @@ const Register = () => {
                   type="button"
                   className="font-medium hover:underline hover:opacity-80 transition-opacity"
                   style={{ color: "#F84565" }}
+                  disabled={isLoading} // Disable button when loading
                 >
                   Terms of Service
                 </button>{" "}
@@ -201,25 +268,27 @@ const Register = () => {
                   type="button"
                   className="font-medium hover:underline hover:opacity-80 transition-opacity"
                   style={{ color: "#F84565" }}
+                  disabled={isLoading} // Disable button when loading
                 >
                   Privacy Policy
                 </button>
               </label>
             </div>
 
-            {/* Submit Button */}
             <button
-              className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] hover:opacity-90"
+              className="w-full h-12 text-white font-semibold rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] hover:opacity-90 cursor-pointer"
+              type="submit"
               style={{
                 backgroundColor: "#F84565",
                 backgroundImage:
                   "linear-gradient(135deg, #F84565 0%, #D63854 100%)",
               }}
+              disabled={isLoading} // Disable submit button when loading
             >
-              Create Account
+              {isLoading ? "Registering..." : "Create Account"}{" "}
+              {/* Change button text when loading */}
             </button>
 
-            {/* Sign In Link */}
             <p className="text-center text-zinc-400 text-sm sm:text-base">
               Already have an account?{" "}
               <Link
@@ -230,7 +299,7 @@ const Register = () => {
                 Sign in
               </Link>
             </p>
-          </div>
+          </form>
         </div>
       </div>
     </div>

@@ -1,19 +1,24 @@
 import React, { useContext, useState, useRef, useEffect } from "react";
 import { assets } from "../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
-import { MenuIcon, SearchIcon, XIcon, User, ChevronDown } from "lucide-react"; // Removed XCircleIcon as it's not used in the provided code
+import { MenuIcon, SearchIcon, XIcon, User, ChevronDown } from "lucide-react";
 import { AppContent } from "../context/AppContext";
 import toast from "react-hot-toast";
 import axios from "axios";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false); // State for search overlay
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const profileDropdownRef = useRef(null);
-  const { userData, backendUrl, setUserData, setIsLoggedIn } =
-    useContext(AppContent);
+  const {
+    userData,
+    backendUrl,
+    setUserData,
+    setIsLoggedIn,
+    isLoggedIn,
+  } = useContext(AppContent); // Destructure isLoggedIn
 
   // Close dropdown and search overlay when clicking outside or pressing Escape
   useEffect(() => {
@@ -46,13 +51,69 @@ const Navbar = () => {
     try {
       axios.defaults.withCredentials = true;
       const { data } = await axios.post(backendUrl + "/api/auth/logout");
-      data.success && setIsLoggedIn(false);
-      data.success && setUserData(false);
-      toast.success(data.message);
-      setIsProfileDropdownOpen(false);
-      navigate("/");
+      if (data.success) {
+        setIsLoggedIn(false);
+        setUserData(null); // Set to null instead of false for consistency
+        toast.success(data.message);
+        setIsProfileDropdownOpen(false);
+        navigate("/");
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(
+        error.response?.data?.message || error.message || "Logout failed"
+      );
+    }
+  };
+
+  const verifyEmailHandler = async () => {
+    // Close the dropdown immediately
+    setIsProfileDropdownOpen(false);
+
+    // If user data isn't available or already verified, prevent action
+    if (!userData || userData.isVerified) {
+      // This case should ideally not be reachable if the UI correctly hides the button,
+      // but it's a good safeguard.
+      if (userData && userData.isVerified) {
+        toast.info("Your email is already verified.");
+      } else {
+        toast.error("User data not available for verification.");
+      }
+      return;
+    }
+
+    const loadingToastId = toast.loading("Sending verification email...");
+
+    try {
+      axios.defaults.withCredentials = true; // Ensure credentials are sent
+      const { data } = await axios.post(
+        backendUrl + "/api/auth/send-verification-email",
+        {} // Empty body, as user ID is sent via cookie/session
+      );
+
+      if (data.success) {
+        toast.success(
+          data.message || "Verification email sent! Please check your inbox.",
+          {
+            id: loadingToastId,
+          }
+        );
+        // Optionally navigate to a page instructing them to check email
+        navigate("/email-verify", { state: { email: userData.email } });
+      } else {
+        toast.error(data.message || "Failed to send verification email.", {
+          id: loadingToastId,
+        });
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Error sending verification email. Please try again later.",
+        {
+          id: loadingToastId,
+        }
+      );
     }
   };
 
@@ -118,7 +179,8 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {userData ? (
+        {/* Use isLoggedIn for conditional rendering */}
+        {isLoggedIn ? (
           <div className="flex items-center gap-8">
             <SearchIcon
               onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -148,18 +210,32 @@ const Navbar = () => {
                   <div className=" sm:hidden w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors text-gray-800 cursor-pointer">
                     {userData?.fullName}
                   </div>
-                  <button
-                    onClick={() => handleProfileNavigation("/my-bookings")}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors text-gray-800 cursor-pointer"
-                  >
-                    My Bookings
-                  </button>
-                  <button
-                    onClick={() => handleProfileNavigation("/profile")}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors text-gray-800 cursor-pointer"
-                  >
-                    User Details
-                  </button>
+                  {userData?.isVerified ? (
+                    <div>
+                      <button
+                        onClick={() => handleProfileNavigation("/my-bookings")}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors text-gray-800 cursor-pointer"
+                      >
+                        My Bookings
+                      </button>
+
+                      <button
+                        onClick={() => handleProfileNavigation("/profile")}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors text-gray-800 cursor-pointer"
+                      >
+                        My Details
+                      </button>
+                    </div>
+                  ) : (
+                    // Button to trigger email verification
+                    <button
+                      onClick={verifyEmailHandler} // Call the new handler
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors text-blue-600 font-semibold cursor-pointer"
+                    >
+                      Verify Email
+                    </button>
+                  )}
+
                   <hr className="my-1 border-gray-200" />
                   <button
                     onClick={logout}

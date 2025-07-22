@@ -12,6 +12,7 @@ import MyBookings from "./pages/MyBookings";
 import Favorite from "./pages/Favorite";
 import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
+import EmailVerification from "./pages/auth/Email-Verify";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ErrorPage from "./pages/404-Page";
 import { Toaster } from "react-hot-toast";
@@ -54,6 +55,7 @@ const App = () => {
         <Route path="/favorite" element={<Favorite />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/email-verify" element={<EmailVerification />} />
         <Route path="/reset-password" element={<ForgetPassword />} />
 
         {/* Dedicated 404 page */}
