@@ -15,7 +15,9 @@ export const getUserData = async (req, res) => {
       success: true,
       userData: {
         fullName: user.fullName,
+        profile: user?.profilePicture,
         email: user.email,
+        role: user.role,
         isVerified: user.isVerified,
       },
       message: "User data fetched successfully",

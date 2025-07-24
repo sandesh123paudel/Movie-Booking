@@ -41,7 +41,7 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEsc);
     };
-  }, []);
+  }, [userData]);
 
   const logout = async () => {
     try {
@@ -196,7 +196,15 @@ const Navbar = () => {
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                 className="flex items-center gap-2 px-4 py-1 sm:px-7 sm:py-2 bg-primary hover:bg-primary-dull transition font-medium rounded-full cursor-pointer"
               >
-                <User className="w-5 h-5" />
+                {userData?.profile ? (
+                  <img
+                    src={userData?.profile}
+                    alt="Profile"
+                    className="w-5 h-5 rounded-full object-cover" //
+                  />
+                ) : (
+                  <User className="w-5 h-5" />
+                )}
                 <span className="max-sm:hidden">
                   {userData?.fullName?.split(" ")[0]}
                 </span>
@@ -313,8 +321,6 @@ const Navbar = () => {
           className="mt-6 px-8 py-3 bg-primary text-white rounded-full text-lg font-semibold shadow-lg hover:bg-primary-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-light focus:ring-opacity-75 cursor-pointer"
           onClick={() => {
             console.log("Search button clicked!");
-            // Add your search logic here
-            // setIsSearchOpen(false); // Optionally close after search
           }}
         >
           Search

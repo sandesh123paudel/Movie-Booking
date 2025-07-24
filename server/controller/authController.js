@@ -224,7 +224,20 @@ export const login = async (req, res) => {
     if (!existingUser) {
       return res.json({ success: false, message: "Invalid User or Password" });
     }
-    const isMatch = await bcrypt.compare(password, existingUser.password); // Added await here
+
+    // --- START: Added logic to handle Google-registered users ---
+    // If the user has a googleId, it means they registered via Google.
+    // They should use Google Sign-In, not email/password.
+    if (existingUser.googleId) {
+      return res.json({
+        success: false,
+        message:
+          "This account was registered with Google. Please sign in with Google.",
+      });
+    }
+    // --- END: Added logic to handle Google-registered users ---
+
+    const isMatch = await bcrypt.compare(password, existingUser.password);
 
     if (!isMatch) {
       return res.json({ success: false, message: "Invalid User or Password" });

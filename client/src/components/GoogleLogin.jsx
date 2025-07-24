@@ -49,14 +49,10 @@ const GoogleLoginComponent = ({ isLoading }) => {
   return (
     <GoogleLogin
       onSuccess={handleSuccess}
+      locale="en"
       onError={handleError}
       render={({ onClick, disabled }) => (
-        <button
-          onClick={onClick}
-          disabled={disabled || isLoading}
-          type="button"
-          className="w-full flex items-center justify-center gap-3 h-12 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-        >
+        <button onClick={onClick} disabled={disabled || isLoading}>
           {/* Google Icon SVG */}
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path
