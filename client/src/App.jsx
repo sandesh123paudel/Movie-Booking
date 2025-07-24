@@ -44,7 +44,7 @@ const App = () => {
     location.pathname.startsWith(path)
   );
 
-  // if (loading) return <Preloader />;
+  if (loading) return <Preloader />;
 
   return (
     <>
