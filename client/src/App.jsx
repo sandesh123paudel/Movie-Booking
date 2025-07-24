@@ -1,9 +1,13 @@
 // App.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { Toaster } from "react-hot-toast";
+import Preloader from "./components/Preloader";
+
+// Pages
 import Home from "./pages/Home";
 import Movies from "./pages/Movies";
 import MovieDetails from "./pages/MovieDetails";
@@ -15,18 +19,32 @@ import Login from "./pages/auth/Login";
 import EmailVerification from "./pages/auth/Email-Verify";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ErrorPage from "./pages/404-Page";
-import { Toaster } from "react-hot-toast";
+
+// Admin Pages
+import Layout from "./pages/admin/Layout";
+import Dashboard from "./pages/admin/Dashboard";
+import AddShows from "./pages/admin/AddShows";
+import ListShows from "./pages/admin/ListShows";
+import ListBookings from "./pages/admin/ListBookings";
 
 const App = () => {
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-  // Define paths where Navbar and Footer should NOT be shown
-  const noNavFooterPaths = ["/404"];
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+    return () => clearTimeout(timeout);
+  }, []);
 
-  // Determine if current path is in the noNavFooterPaths list or starts with /verify-email
-  const hideNavFooter =
-    noNavFooterPaths.includes(location.pathname) ||
-    location.pathname.startsWith("/verify-email");
+  // Hide Navbar/Footer on these paths
+  const hiddenPaths = ["/404", "/verify-email", "/admin"];
+  const hideNavFooter = hiddenPaths.some((path) =>
+    location.pathname.startsWith(path)
+  );
+
+  // if (loading) return <Preloader />;
 
   return (
     <>
@@ -42,11 +60,11 @@ const App = () => {
         }}
       />
 
-      {/* Conditionally render Navbar */}
+      {/* Show Navbar if not in admin or special routes */}
       {!hideNavFooter && <Navbar />}
 
       <Routes>
-        {/* Your app routes */}
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/movies" element={<Movies />} />
         <Route path="/movies/:id" element={<MovieDetails />} />
@@ -57,15 +75,21 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/email-verify" element={<EmailVerification />} />
         <Route path="/reset-password" element={<ForgetPassword />} />
-
-        {/* Dedicated 404 page */}
         <Route path="/404" element={<ErrorPage />} />
 
-        {/* Redirect all unknown routes to /404 */}
+        {/* Admin Routes */}
+        <Route path="/admin" element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="add-shows" element={<AddShows />} />
+          <Route path="list-shows" element={<ListShows />} />
+          <Route path="list-bookings" element={<ListBookings />} />
+        </Route>
+
+        {/* 404 fallback */}
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
 
-      {/* Conditionally render Footer */}
+      {/* Show Footer if not in admin or special routes */}
       {!hideNavFooter && <Footer />}
     </>
   );
