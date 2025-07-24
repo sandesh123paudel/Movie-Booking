@@ -5,6 +5,7 @@ import { MenuIcon, SearchIcon, XIcon, User, ChevronDown } from "lucide-react";
 import { AppContent } from "../context/AppContext";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { googleLogout } from "@react-oauth/google";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,13 +13,8 @@ const Navbar = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const profileDropdownRef = useRef(null);
-  const {
-    userData,
-    backendUrl,
-    setUserData,
-    setIsLoggedIn,
-    isLoggedIn,
-  } = useContext(AppContent); // Destructure isLoggedIn
+  const { userData, backendUrl, setUserData, setIsLoggedIn, isLoggedIn } =
+    useContext(AppContent); // Destructure isLoggedIn
 
   // Close dropdown and search overlay when clicking outside or pressing Escape
   useEffect(() => {
@@ -54,6 +50,13 @@ const Navbar = () => {
       if (data.success) {
         setIsLoggedIn(false);
         setUserData(null); // Set to null instead of false for consistency
+        // Google logout
+        try {
+          googleLogout();
+        } catch (googleError) {
+          console.log("Google logout error:", googleError);
+          // Don't fail the entire logout if Google logout fails
+        }
         toast.success(data.message);
         setIsProfileDropdownOpen(false);
         navigate("/");

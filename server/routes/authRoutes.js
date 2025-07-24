@@ -28,7 +28,7 @@ authRouter.post("/verify-email", userAuth, verifyEmail);
 authRouter.get("/is-auth", userAuth, isAuthenticated);
 authRouter.post("/send-passwordReset-email", sendResetCode);
 authRouter.post("/reset-password", resetPasswordValidator(), verifyResetCode);
-authRouter.post("/logout", logout);
+authRouter.post("/logout", userAuth, logout);
 
 //Google Routes
 authRouter.post("/google", googleAuth);

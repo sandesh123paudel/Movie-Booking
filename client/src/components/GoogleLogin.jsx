@@ -5,12 +5,11 @@ import toast from "react-hot-toast"; // Ensure toast is imported if used
 import { useNavigate } from "react-router-dom";
 import { AppContent } from "../context/AppContext";
 
-const GoogleLoginComponent = ({ isLoading, setIsLoading }) => {
+const GoogleLoginComponent = ({ isLoading }) => {
   const navigate = useNavigate();
   const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContent);
 
   const handleSuccess = async (credentialResponse) => {
-    setIsLoading(true);
     let googleLoginToastId = toast.loading("Signing in with Google...");
 
     try {
@@ -40,14 +39,11 @@ const GoogleLoginComponent = ({ isLoading, setIsLoading }) => {
           "Google login failed. Please try again.",
         { id: googleLoginToastId }
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleError = () => {
     toast.error("Google login failed");
-    setIsLoading(false);
   };
 
   return (

@@ -22,7 +22,7 @@ const setTokenCookie = (res, token) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, //
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
 
@@ -37,6 +37,7 @@ export const googleAuth = async (req, res) => {
         message: "Token is required",
       });
     }
+
     // Verify the Google token
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
@@ -52,18 +53,44 @@ export const googleAuth = async (req, res) => {
         message: "Google email not verified",
       });
     }
+
     // Check if user already exists
     let user = await userModel.findOne({ email });
 
     if (user) {
-      // User exists, update Google ID if not set
+      // User exists, update fields if necessary and then log them in
+      let shouldUpdate = false;
+
+      // Update full name if it's different and provided by Google
+      if (name && user.fullName !== name) {
+        user.fullName = name;
+        shouldUpdate = true;
+      }
+      // Update googleId if missing
       if (!user.googleId) {
         user.googleId = googleId;
+        shouldUpdate = true;
+      }
+      // Update profile picture if missing and provided by Google
+      if (picture && !user.profilePicture) {
         user.profilePicture = picture;
+        shouldUpdate = true;
+      }
+
+      if (shouldUpdate) {
         await user.save();
       }
+
+      // Generate JWT token and set cookie for the existing user
+      const jwtToken = generateToken(user._id);
+      setTokenCookie(res, jwtToken);
+
+      return res.json({
+        success: true,
+        message: "Logged in successfully with Google",
+      });
     } else {
-      // Create new user with Google data
+      // Create new user with Google data if email does not exist
       user = new userModel({
         fullName: name,
         email: email,
@@ -74,6 +101,7 @@ export const googleAuth = async (req, res) => {
       });
 
       await user.save();
+
       // Send welcome email for new Google users
       const mailOptions = {
         from: `"Quick Show-Movie Booking" <${process.env.EMAIL_ADDRESS}>`,
@@ -90,18 +118,16 @@ export const googleAuth = async (req, res) => {
         console.log("Welcome email failed:", emailError.message);
         // Don't fail the registration if email fails
       }
+
+      // Generate JWT token and set cookie for new users
+      const jwtToken = generateToken(user._id);
+      setTokenCookie(res, jwtToken);
+
+      return res.json({
+        success: true,
+        message: "Account created and logged in successfully with Google",
+      });
     }
-
-    // Generate JWT token and set cookie
-    const jwtToken = generateToken(user._id);
-    setTokenCookie(res, jwtToken);
-
-    return res.json({
-      success: true,
-      message: user.isNew
-        ? "Account created and logged in successfully with Google"
-        : "Logged in successfully with Google",
-    });
   } catch (error) {
     console.error("Google auth error:", error);
 
@@ -198,7 +224,7 @@ export const login = async (req, res) => {
     if (!existingUser) {
       return res.json({ success: false, message: "Invalid User or Password" });
     }
-    const isMatch = bcrypt.compare(password, existingUser.password);
+    const isMatch = await bcrypt.compare(password, existingUser.password); // Added await here
 
     if (!isMatch) {
       return res.json({ success: false, message: "Invalid User or Password" });
@@ -312,7 +338,7 @@ export const sendResetCode = async (req, res) => {
         message: "User not found",
       });
     }
-    const otp = Math.floor(10000 + Math.random() * 900000);
+    const otp = Math.floor(100000 + Math.random() * 900000); // Changed to 6 digits for consistency
     user.resetOtp = otp;
     user.resetOtpExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
@@ -320,7 +346,7 @@ export const sendResetCode = async (req, res) => {
       from: `"RESET-PASSWORD" <${process.env.EMAIL_ADDRESS}>`,
 
       to: user.email,
-      subject: "Account Verification OTP",
+      subject: "Password Reset OTP", // Changed subject for clarity
       html: PASSWORD_RESET_TEMPLATE.replace("{{otp}}", otp).replace(
         "{{email}}",
         user.email
@@ -361,7 +387,7 @@ export const verifyResetCode = async (req, res) => {
       return res.json({ success: false, message: "Invalid OTP" });
     }
     if (user.resetOtpExpiresAt < Date.now()) {
-      return res.json({ success: false, message: "Invalid OTP" });
+      return res.json({ success: false, message: "OTP Expired" }); // Changed message for clarity
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -381,6 +407,19 @@ export const verifyResetCode = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
+    const userId = req.userId; // from your auth middleware
+
+    if (userId) {
+      // Optional: Log the logout activity or update last logout time
+      const user = await userModel.findById(userId);
+      if (user) {
+        // You could add a lastLogout field to track activity
+        // user.lastLogout = new Date();
+        // await user.save();
+        console.log(`User ${user.email} logged out`);
+      }
+    }
+
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

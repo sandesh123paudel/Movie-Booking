@@ -71,13 +71,11 @@ const Login = () => {
             </p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="flex flex-col space-y-6" onSubmit={handleSubmit}>
             {/* Divider */}
-            <GoogleLoginComponent
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-            />
-
+            <div className="">
+              <GoogleLoginComponent isLoading={isLoading} />
+            </div>
             <div className="flex items-center gap-4">
               <div className="flex-1 h-px bg-zinc-700"></div>
               <span className="text-xs sm:text-sm text-zinc-500 font-medium whitespace-nowrap">
