@@ -14,7 +14,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const profileDropdownRef = useRef(null);
   const { userData, backendUrl, setUserData, setIsLoggedIn, isLoggedIn } =
-    useContext(AppContent); // Destructure isLoggedIn
+    useContext(AppContent);
 
   // Close dropdown and search overlay when clicking outside or pressing Escape
   useEffect(() => {
@@ -41,7 +41,7 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEsc);
     };
-  }, [userData]);
+  }, []);
 
   const logout = async () => {
     try {
@@ -198,7 +198,7 @@ const Navbar = () => {
               >
                 {userData?.profile ? (
                   <img
-                    src={userData?.profile}
+                    src={userData.profile}
                     alt="Profile"
                     className="w-5 h-5 rounded-full object-cover" //
                   />
