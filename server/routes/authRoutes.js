@@ -6,6 +6,7 @@ import {
 } from "../middlewares/validator.js";
 import {
   createAdminUser,
+  googleAuth,
   isAuthenticated,
   login,
   logout,
@@ -28,5 +29,8 @@ authRouter.get("/is-auth", userAuth, isAuthenticated);
 authRouter.post("/send-passwordReset-email", sendResetCode);
 authRouter.post("/reset-password", resetPasswordValidator(), verifyResetCode);
 authRouter.post("/logout", logout);
+
+//Google Routes
+authRouter.post("/google", googleAuth);
 
 export default authRouter;

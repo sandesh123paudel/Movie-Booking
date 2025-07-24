@@ -1,4 +1,3 @@
-// App.jsx
 import React, { useEffect, useState } from "react";
 import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 
@@ -28,17 +27,28 @@ import ListShows from "./pages/admin/ListShows";
 import ListBookings from "./pages/admin/ListBookings";
 
 const App = () => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    const lastVisit = localStorage.getItem("lastVisit");
+    const now = Date.now();
+
+    if (!lastVisit || now - parseInt(lastVisit) > 24 * 60 * 60 * 1000) {
+      // First visit or after 24 hours
+      setLoading(true);
+      localStorage.setItem("lastVisit", now.toString());
+
+      const timeout = setTimeout(() => {
+        setLoading(false);
+      }, 3000); // Show preloader for 3s
+
+      return () => clearTimeout(timeout);
+    } else {
       setLoading(false);
-    }, 1500);
-    return () => clearTimeout(timeout);
+    }
   }, []);
 
-  // Hide Navbar/Footer on these paths
   const hiddenPaths = ["/404", "/verify-email", "/admin"];
   const hideNavFooter = hiddenPaths.some((path) =>
     location.pathname.startsWith(path)
@@ -60,7 +70,6 @@ const App = () => {
         }}
       />
 
-      {/* Show Navbar if not in admin or special routes */}
       {!hideNavFooter && <Navbar />}
 
       <Routes>
@@ -89,7 +98,6 @@ const App = () => {
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
 
-      {/* Show Footer if not in admin or special routes */}
       {!hideNavFooter && <Footer />}
     </>
   );

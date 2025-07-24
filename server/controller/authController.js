@@ -8,6 +8,8 @@ import {
   WELCOME_MESSAGE_TEMPLATE,
 } from "../config/emailTemplate.js";
 import { validationResult } from "express-validator";
+import { OAuth2Client } from "google-auth-library";
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -24,6 +26,101 @@ const setTokenCookie = (res, token) => {
   });
 };
 
+//Google SignIN
+export const googleAuth = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Token is required",
+      });
+    }
+    // Verify the Google token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture, email_verified } = payload;
+
+    if (!email_verified) {
+      return res.status(400).json({
+        success: false,
+        message: "Google email not verified",
+      });
+    }
+    // Check if user already exists
+    let user = await userModel.findOne({ email });
+
+    if (user) {
+      // User exists, update Google ID if not set
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.profilePicture = picture;
+        await user.save();
+      }
+    } else {
+      // Create new user with Google data
+      user = new userModel({
+        fullName: name,
+        email: email,
+        googleId: googleId,
+        profilePicture: picture,
+        isVerified: true, // Google accounts are pre-verified
+        // No password needed for Google users
+      });
+
+      await user.save();
+      // Send welcome email for new Google users
+      const mailOptions = {
+        from: `"Quick Show-Movie Booking" <${process.env.EMAIL_ADDRESS}>`,
+        to: user.email,
+        subject: "Welcome to QuickShow",
+        html: WELCOME_MESSAGE_TEMPLATE.replace("{{email}}", user.email)
+          .replace("{{name}}", user.fullName)
+          .replace("{{current_year}}", new Date().getFullYear()),
+      };
+
+      try {
+        await transporter.sendMail(mailOptions);
+      } catch (emailError) {
+        console.log("Welcome email failed:", emailError.message);
+        // Don't fail the registration if email fails
+      }
+    }
+
+    // Generate JWT token and set cookie
+    const jwtToken = generateToken(user._id);
+    setTokenCookie(res, jwtToken);
+
+    return res.json({
+      success: true,
+      message: user.isNew
+        ? "Account created and logged in successfully with Google"
+        : "Logged in successfully with Google",
+    });
+  } catch (error) {
+    console.error("Google auth error:", error);
+
+    if (
+      error.message.includes("Token used too early") ||
+      error.message.includes("Invalid token")
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Google token",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Google authentication failed",
+    });
+  }
+};
 //Create  an admin
 export const createAdminUser = async (req, res) => {
   const admin = await userModel.findOne({ email: "admin@quickshow.com" });
