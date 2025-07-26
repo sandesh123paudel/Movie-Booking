@@ -72,18 +72,6 @@ const Login = () => {
           </div>
 
           <form className="flex flex-col space-y-6" onSubmit={handleSubmit}>
-            {/* Divider */}
-            <div className="">
-              <GoogleLoginComponent isLoading={isLoading} />
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex-1 h-px bg-zinc-700"></div>
-              <span className="text-xs sm:text-sm text-zinc-500 font-medium whitespace-nowrap">
-                Or continue with email
-              </span>
-              <div className="flex-1 h-px bg-zinc-700"></div>
-            </div>
-
             {/* Email Input */}
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
@@ -222,6 +210,16 @@ const Login = () => {
               </Link>
             </p>
           </form>
+          <div className="flex items-center gap-4 mt-4">
+            <div className="flex-1 h-px bg-zinc-700"></div>
+            <span className="text-xs sm:text-sm text-zinc-500 font-medium whitespace-nowrap">
+              Or
+            </span>
+            <div className="flex-1 h-px bg-zinc-700"></div>
+          </div>
+          <div className="flex justify-center mt-4">
+            <GoogleLoginComponent isLoading={isLoading} />
+          </div>
         </div>
       </div>
     </div>

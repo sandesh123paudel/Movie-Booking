@@ -14,7 +14,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const profileDropdownRef = useRef(null);
   const { userData, backendUrl, setUserData, setIsLoggedIn, isLoggedIn } =
-    useContext(AppContent);
+  useContext(AppContent);
 
   // Close dropdown and search overlay when clicking outside or pressing Escape
   useEffect(() => {
