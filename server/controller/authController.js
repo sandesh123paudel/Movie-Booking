@@ -26,7 +26,7 @@ const setTokenCookie = (res, token) => {
   });
 };
 
-//Google SignIN
+//Google Signin
 export const googleAuth = async (req, res) => {
   try {
     const { token } = req.body;
@@ -147,6 +147,8 @@ export const googleAuth = async (req, res) => {
     });
   }
 };
+
+
 //Create  an admin
 export const createAdminUser = async (req, res) => {
   const admin = await userModel.findOne({ email: "admin@quickshow.com" });
@@ -210,7 +212,7 @@ export const register = async (req, res) => {
   }
 };
 
-//Login API
+//Login API function 
 export const login = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
